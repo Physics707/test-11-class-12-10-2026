@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#05070d">
+<title>Физика • 11 класс • Переменный ток</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Rubik:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#05070d; --bg1:#0a0f1c;
+  --ink:#e8f4ff; --mut:#8fa3c8; --line:#1b2a47;
+  --cyan:#33e6ff; --mag:#ff3dcf; --vio:#7c4dff; --amber:#ffb347; --lime:#7dff9b; --red:#ff4d6d;
+  --disp:'Unbounded', system-ui, sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Rubik',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--bg0); color:var(--ink);
+  min-height:100vh; min-height:100dvh;
+  overflow-x:hidden; overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
+}
+/* ===== фоновые слои ===== */
+.bg-glow{position:fixed;inset:0;z-index:-4;pointer-events:none;
+  background:
+    radial-gradient(620px 420px at 85% -5%, rgba(255,61,207,.13), transparent 60%),
+    radial-gradient(720px 500px at -10% 25%, rgba(51,230,255,.12), transparent 60%),
+    radial-gradient(560px 420px at 55% 115%, rgba(124,77,255,.15), transparent 60%);
+}
+.bg-grid{position:fixed;inset:0;z-index:-3;pointer-events:none;
+  background-image:linear-gradient(rgba(70,120,255,.055) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(70,120,255,.055) 1px,transparent 1px);
+  background-size:36px 36px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 15%,#000 30%,transparent 78%);
+          mask-image:radial-gradient(ellipse at 50% 15%,#000 30%,transparent 78%);
+}
+.orb{position:fixed;border-radius:50%;filter:blur(70px);opacity:.5;z-index:-2;pointer-events:none;animation:drift 16s ease-in-out infinite alternate}
+.o1{width:260px;height:260px;background:rgba(51,230,255,.16);top:-60px;left:-70px}
+.o2{width:300px;height:300px;background:rgba(255,61,207,.12);bottom:6%;right:-90px;animation-delay:-6s}
+.o3{width:220px;height:220px;background:rgba(124,77,255,.14);top:44%;left:-90px;animation-delay:-11s}
+@keyframes drift{to{transform:translate(34px,26px) scale(1.08)}}
+
+.wrap{width:min(760px,100%);margin:0 auto;padding:20px 16px calc(44px + env(safe-area-inset-bottom))}
+.screen{display:none}
+.screen.on{display:block;animation:rise .5s cubic-bezier(.22,.9,.3,1)}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.hidden{display:none!important}
+
+/* ===== шапка-«осциллограф» ===== */
+.mast-top{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  font-size:11px;letter-spacing:.22em;color:var(--mut);text-transform:uppercase;margin-bottom:14px}
+.mast-top .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--lime);
+  box-shadow:0 0 10px var(--lime);margin-right:8px;animation:blink 2s infinite}
+@keyframes blink{50%{opacity:.25}}
+.sinewrap{border:1px solid rgba(51,230,255,.18);border-radius:12px;background:rgba(8,13,26,.6);
+  padding:6px 8px;margin-bottom:18px;overflow:hidden}
+.sinewrap svg{display:block;width:100%;height:56px}
+.waveline{stroke:var(--cyan);stroke-width:2.2;fill:none;stroke-dasharray:7 5;
+  filter:drop-shadow(0 0 6px rgba(51,230,255,.8));animation:flow 2.6s linear infinite}
+.waveline.m{stroke:var(--mag);filter:drop-shadow(0 0 6px rgba(255,61,207,.7));animation-duration:3.8s;opacity:.55}
+@keyframes flow{to{stroke-dashoffset:-120}}
+.kicker{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--mag);margin-bottom:8px}
+h1.title{font-family:var(--disp);font-weight:800;font-size:clamp(24px,6.4vw,42px);line-height:1.12;
+  text-shadow:0 0 16px rgba(51,230,255,.5),0 0 52px rgba(51,230,255,.22);margin-bottom:10px}
+.subtitle{color:var(--mut);font-size:14.5px;line-height:1.55;margin-bottom:16px}
+.teacher{display:flex;gap:12px;align-items:center;border:1px solid rgba(255,179,71,.28);
+  background:linear-gradient(120deg,rgba(255,179,71,.09),rgba(255,61,207,.05));
+  border-radius:14px;padding:12px 14px;margin-bottom:18px}
+.teacher .ico{font-size:22px}
+.teacher small{display:block;color:var(--mut);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.teacher b{font-size:15px;color:#ffe6bd}
+
+.panel{background:linear-gradient(160deg,rgba(13,20,38,.92),rgba(8,12,24,.95));
+  border:1px solid rgba(90,140,255,.16);border-radius:20px;padding:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);margin-bottom:16px}
+.panel h2{font-family:var(--disp);font-weight:600;font-size:17px;margin-bottom:14px}
+.panel h2 .sp{color:var(--cyan)}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:7px}
+input[type=text],select{
+  width:100%;font-family:'Rubik';font-size:16px;color:var(--ink);
+  background:#0b1322;border:1px solid var(--line);border-radius:12px;
+  padding:13px 14px;outline:none;transition:border-color .25s, box-shadow .25s;
+  -webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--cyan) 50%),linear-gradient(135deg,var(--cyan) 50%,transparent 50%);
+  background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat}
+input[type=text]:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan),0 0 18px rgba(51,230,255,.35)}
+.err{color:var(--red);font-size:13px;margin-top:8px;display:none}
+.err.show{display:block;animation:rise .3s}
+
+/* ===== кнопки ===== */
+.btn{display:block;width:100%;border:1px solid rgba(51,230,255,.35);border-radius:14px;
+  background:rgba(51,230,255,.05);color:var(--cyan);
+  font-family:var(--disp);font-weight:600;font-size:14px;letter-spacing:.12em;text-transform:uppercase;
+  padding:16px 18px;cursor:pointer;transition:all .3s;touch-action:manipulation}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.3;box-shadow:none;cursor:default;pointer-events:none}
+.btn.lit{background:rgba(51,230,255,.16);border-color:var(--cyan);
+  box-shadow:0 0 18px rgba(51,230,255,.55),0 0 48px rgba(51,230,255,.18),inset 0 0 14px rgba(51,230,255,.12);
+  animation:pulseBtn 1.8s ease-in-out infinite}
+@keyframes pulseBtn{50%{box-shadow:0 0 26px rgba(51,230,255,.8),0 0 70px rgba(51,230,255,.28),inset 0 0 20px rgba(51,230,255,.18)}}
+.btn.ghost{border-color:rgba(143,163,200,.35);color:var(--mut);background:transparent}
+.att-note{margin-top:12px;font-size:12.5px;color:var(--mut);text-align:center}
+.att-note b{color:var(--amber)}
+
+/* ===== дисклеймер ===== */
+.rules li{list-style:none;display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px dashed rgba(90,140,255,.16);font-size:14.5px;line-height:1.5}
+.rules li:last-child{border-bottom:none}
+.rules .ri{font-size:19px;flex:0 0 auto}
+.rules b{color:#fff}
+.badge-try{display:inline-block;font-family:var(--disp);font-size:12px;color:var(--amber);
+  border:1px solid rgba(255,179,71,.45);border-radius:999px;padding:6px 14px;margin-bottom:14px;
+  box-shadow:0 0 14px rgba(255,179,71,.18)}
+
+/* ===== тест ===== */
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.who{font-size:12.5px;color:var(--mut);letter-spacing:.04em}
+.who b{color:var(--ink)}
+.chip{font-family:var(--disp);font-size:10.5px;letter-spacing:.08em;color:var(--mag);
+  border:1px solid rgba(255,61,207,.4);border-radius:999px;padding:5px 12px;
+  box-shadow:0 0 12px rgba(255,61,207,.15);text-transform:uppercase}
+.segs{display:flex;gap:5px;margin-bottom:14px}
+.segs span{flex:1;height:6px;border-radius:4px;background:#13203a;transition:all .4s}
+.segs span.done{background:rgba(51,230,255,.45)}
+.segs span.cur{background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.qcount{font-family:var(--disp);font-size:13px;letter-spacing:.1em;color:var(--mut);margin-bottom:10px}
+.qcount b{color:#fff;font-size:17px}
+
+.trow{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.tbar-track{flex:1;height:8px;border-radius:6px;background:#101a2f;overflow:hidden}
+.tbar{height:100%;width:100%;border-radius:6px;background:linear-gradient(90deg,var(--cyan),var(--vio));
+  box-shadow:0 0 12px rgba(51,230,255,.6);transition:width .12s linear}
+.tbar.low{background:linear-gradient(90deg,var(--amber),var(--red));box-shadow:0 0 14px rgba(255,77,109,.7)}
+.ttime{font-family:var(--disp);font-weight:600;font-size:16px;min-width:52px;text-align:right;color:var(--cyan)}
+.ttime.low{color:var(--red);animation:blink .8s infinite}
+
+.qcard{border:1px solid rgba(90,140,255,.2);border-radius:16px;background:rgba(9,14,28,.75);
+  padding:18px 16px;margin-bottom:16px;user-select:none;-webkit-user-select:none}
+.qcard p.qt{font-size:16.5px;line-height:1.55}
+.qcard .hint{margin-top:8px;font-size:13px;color:var(--mut)}
+.qcard svg.fig{width:100%;height:auto;display:block;margin-top:12px;border:1px solid rgba(90,140,255,.14);border-radius:12px;background:rgba(6,10,20,.7)}
+
+.opts{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;width:100%;
+  border:1px solid var(--line);border-radius:14px;background:rgba(10,16,30,.72);
+  padding:14px;color:var(--ink);font-family:'Rubik';font-size:15.5px;line-height:1.4;cursor:pointer;
+  transition:border-color .25s, box-shadow .25s, transform .15s;touch-action:manipulation;
+  user-select:none;-webkit-user-select:none}
+.opt:active{transform:scale(.985)}
+.opt .key{flex:0 0 32px;height:32px;border:1px solid rgba(51,230,255,.4);border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:13px;color:var(--cyan);transition:all .25s}
+.opt.picked{border-color:var(--cyan);color:#fff;
+  box-shadow:0 0 16px rgba(51,230,255,.5),0 0 44px rgba(51,230,255,.14),inset 0 0 14px rgba(51,230,255,.1);
+  animation:pickGlow 1.6s ease-in-out infinite}
+@keyframes pickGlow{50%{box-shadow:0 0 24px rgba(51,230,255,.75),0 0 60px rgba(51,230,255,.2),inset 0 0 18px rgba(51,230,255,.14)}}
+.opt.picked .key{background:var(--cyan);color:#05070d;box-shadow:0 0 12px rgba(51,230,255,.8)}
+.opt sub{font-size:.72em}
+
+.calc-ans{margin-bottom:18px}
+.calc-ans input{font-family:var(--disp);font-size:22px;text-align:center;letter-spacing:.06em}
+.calc-note{font-size:12.5px;color:var(--mut);margin-top:8px;text-align:center}
+
+/* ===== SVG внутри вопросов ===== */
+svg .g{stroke:#16233d;stroke-width:1}
+svg .ax{stroke:#9fb6e0;stroke-width:1.6}
+svg .axf{fill:#9fb6e0}
+svg .tk{stroke:#9fb6e0;stroke-width:1.4}
+svg .num{fill:#8fa3c8;font:10px 'Rubik'}
+svg .axl{fill:#cfe3ff;font:600 12px 'Rubik'}
+svg .wave{stroke:var(--cyan);stroke-width:2.6;fill:none;filter:drop-shadow(0 0 6px rgba(51,230,255,.85))}
+.circuit{width:100%;max-width:340px;height:auto;display:block;margin:12px auto 0;filter:drop-shadow(0 0 8px rgba(51,230,255,.22))}
+.circuit .wire{stroke:#8fe9ff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.circuit .cl{fill:#cfe3ff;font:600 13px 'Rubik'}
+
+/* ===== результат ===== */
+.res-ring{position:relative;width:170px;margin:6px auto 16px}
+.res-ring svg{width:100%;height:auto;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:#13203a;stroke-width:10}
+.ring-fg{fill:none;stroke:var(--cyan);stroke-width:10;stroke-linecap:round;
+  stroke-dasharray:402;stroke-dashoffset:402;transition:stroke-dashoffset 1.4s cubic-bezier(.3,.8,.3,1);
+  filter:drop-shadow(0 0 10px rgba(51,230,255,.7))}
+.res-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.res-num b{font-family:var(--disp);font-size:34px;text-shadow:0 0 18px rgba(51,230,255,.55)}
+.res-num small{color:var(--mut);font-size:12px;letter-spacing:.14em}
+.verdict{text-align:center;font-size:16px;font-weight:600;margin-bottom:18px}
+.res-table{width:100%;border-collapse:collapse;font-size:14.5px}
+.res-table td{padding:10px 4px;border-bottom:1px dashed rgba(90,140,255,.16)}
+.res-table td:first-child{color:var(--mut);width:45%}
+.res-table td:last-child{font-weight:600}
+.send-line{margin-top:14px;text-align:center;font-size:13px;color:var(--mut)}
+.send-line.ok{color:var(--lime)} .send-line.bad{color:var(--red)} .send-line.warn{color:var(--amber)}
+
+/* ===== модал предупреждения ===== */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(3,5,10,.82);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-card{width:min(430px,100%);border:1px solid rgba(255,179,71,.5);border-radius:20px;
+  background:linear-gradient(165deg,#1a1408,#0c0a06);padding:26px 22px;text-align:center;
+  box-shadow:0 0 40px rgba(255,179,71,.25);animation:rise .35s}
+.warn-ico{font-size:44px;margin-bottom:10px;animation:blink 1s infinite}
+.modal-card h3{font-family:var(--disp);font-size:17px;color:var(--amber);margin-bottom:10px}
+.modal-card p{font-size:14px;line-height:1.55;color:#ffe6bd;margin-bottom:18px}
+.modal-card .reason{display:block;color:var(--mut);font-size:12.5px;margin-top:6px}
+
+.flash{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:60;
+  font-family:var(--disp);font-size:13px;color:#05070d;background:var(--amber);
+  padding:11px 22px;border-radius:999px;box-shadow:0 0 26px rgba(255,179,71,.7);animation:rise .3s}
+
+footer{margin-top:26px;text-align:center;font-size:11.5px;color:#4c5f85;letter-spacing:.1em}
+footer .lock{color:var(--lime)}
+
+@media (min-width:640px){
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  .opt:hover{border-color:rgba(51,230,255,.55);transform:translateX(3px)}
+  .btn:hover{filter:brightness(1.15)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div><div class="bg-grid"></div>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+
+<main class="wrap">
+
+<!-- ═════════ ЭКРАН 1: СТАРТ ═════════ -->
+<section class="screen on" id="scr-start">
+  <div class="mast-top">
+    <span><span class="dot"></span>Физика • 11 класс</span>
+    <span id="dateNow"></span>
+  </div>
+  <div class="sinewrap" aria-hidden="true">
+    <svg viewBox="0 0 320 56" preserveAspectRatio="none">
+      <path class="waveline" d="M0 28 C 13 2, 27 2, 40 28 S 67 54, 80 28 S 107 2, 120 28 S 147 54, 160 28 S 187 2, 200 28 S 227 54, 240 28 S 267 2, 280 28 S 307 54, 320 28"/>
+      <path class="waveline m" d="M0 28 C 13 50, 27 50, 40 28 S 67 6, 80 28 S 107 50, 120 28 S 147 6, 160 28 S 187 50, 200 28 S 227 6, 240 28 S 307 50, 320 28"/>
+    </svg>
+  </div>
+  <p class="kicker">Контрольный тест · переменный ток</p>
+  <h1 class="title">ЭДС генератора.<br>Цепи переменного тока</h1>
+  <p class="subtitle">10 вопросов · 1,5 минуты на каждый · 6 тестовых + 4 расчётные задачи.
+     Темы: ЭДС генератора, мгновенные и действующие значения, реактивные сопротивления, резонанс, трансформатор.</p>
+
+  <div class="teacher">
+    <span class="ico">👨‍🏫</span>
+    <div><small>Учитель физики</small><b>Кунгозин Даулет Багдашұлы</b></div>
+  </div>
+
+  <div class="panel">
+    <h2>Допуск к тесту <span class="sp">⌁</span></h2>
+    <div class="field">
+      <label for="inpFio">Фамилия и имя учащегося</label>
+      <input type="text" id="inpFio" placeholder="Введите ФИ" autocomplete="name" autocapitalize="words">
+    </div>
+    <div class="two-col">
+      <div class="field">
+        <label for="selClass">Класс</label>
+        <select id="selClass">
+          <option value="" selected disabled>— выберите —</option>
+          <option>11 «Б»</option>
+          <option>11 «В»</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="selVariant">Вариант</label>
+        <select id="selVariant">
+          <option value="" selected disabled>— выберите —</option>
+          <option value="1">Вариант 1</option>
+          <option value="2">Вариант 2</option>
+        </select>
+      </div>
+    </div>
+    <p class="err" id="fioErr">Укажите фамилию и имя (минимум 2 слова), класс и вариант.</p>
+    <button class="btn lit" id="btnToRules">Продолжить →</button>
+    <p class="att-note" id="attNote"></p>
+  </div>
+</section>
+
+<!-- ═════════ ЭКРАН 2: ДИСКЛЕЙМЕР ═════════ -->
+<section class="screen" id="scr-rules">
+  <div class="panel">
+    <span class="badge-try" id="attemptBadge">Попытка № 1</span>
+    <h2>Правила и академическая честность <span class="sp">⌁</span></h2>
+    <ul class="rules">
+      <li><span class="ri">⏱</span><span><b>1 минута 30 секунд</b> на каждый вопрос. Если время вышло — автоматический переход к следующему вопросу.</span></li>
+      <li><span class="ri">🔒</span><span>Кнопки «Назад» <b>нет</b>. Исправить выбранный ответ нельзя.</span></li>
+      <li><span class="ri">🎯</span><span>10 вопросов, за каждый — <b>1 балл</b>, максимум <b>10 баллов</b>. Ответ на расчётную задачу — <b>только число, без единиц измерения</b> (дробную часть через запятую или точку).</span></li>
+      <li><span class="ri">📵</span><span><b>Античит:</b> не сворачивайте тест и не открывайте другие окна поверх него. Первое нарушение — <b>предупреждение</b>, второе — тест <b>завершается автоматически</b>, попытка сгорает, выставляется <b>0 баллов</b>.</span></li>
+      <li><span class="ri">🧮</span><span>Калькулятор, учебники и переписка <b>запрещены</b>. Работайте самостоятельно — это вопрос чести.</span></li>
+      <li><span class="ri">📊</span><span>Каждый запуск теста считается <b>попыткой</b>. Результат отправляется учителю в Google Таблицу.</span></li>
+    </ul>
+    <p class="err" id="ruleErr"></p>
+    <button class="btn lit" id="btnStart" style="margin-top:14px">Я согласен(на) • Начать тест ⚡</button>
+  </div>
+</section>
+
+<!-- ═════════ ЭКРАН 3: ТЕСТ ═════════ -->
+<section class="screen" id="scr-quiz">
+  <div class="qhead">
+    <span class="who" id="qWho"></span>
+    <span class="chip" id="qTopic"></span>
+  </div>
+  <div class="segs" id="segs"></div>
+  <div class="qcount">Вопрос <b id="qNum">1</b> / <span id="qTotal">10</span></div>
+  <div class="trow">
+    <div class="tbar-track"><div class="tbar" id="tBar"></div></div>
+    <div class="ttime" id="tTime">1:30</div>
+  </div>
+  <div class="qcard">
+    <p class="qt" id="qText"></p>
+    <div id="qFig"></div>
+  </div>
+  <div class="opts" id="optWrap"></div>
+  <div class="calc-ans hidden" id="calcWrap">
+    <input type="text" id="calcInp" inputmode="decimal" enterkeyhint="done" placeholder="?" autocomplete="off">
+    <p class="calc-note">Введите только число. Пример: 62,8</p>
+  </div>
+  <button class="btn" id="btnNext" disabled>Далее →</button>
+</section>
+
+<!-- ═════════ ЭКРАН 4: РЕЗУЛЬТАТ ═════════ -->
+<section class="screen" id="scr-result">
+  <div class="panel">
+    <h2 style="text-align:center">Результаты теста <span class="sp">⌁</span></h2>
+    <div class="res-ring">
+      <svg viewBox="0 0 160 160">
+        <circle class="ring-bg" cx="80" cy="80" r="64"></circle>
+        <circle class="ring-fg" id="ringFg" cx="80" cy="80" r="64"></circle>
+      </svg>
+      <div class="res-num"><b id="rScore">0</b><small>ИЗ 10 БАЛЛОВ</small></div>
+    </div>
+    <p class="verdict" id="rVerdict"></p>
+    <table class="res-table">
+      <tr><td>Учащийся</td><td id="rFio"></td></tr>
+      <tr><td>Класс</td><td id="rCls"></td></tr>
+      <tr><td>Вариант</td><td id="rVar"></td></tr>
+      <tr><td>Верных ответов</td><td id="rOk"></td></tr>
+      <tr><td>Использовано попыток</td><td id="rAtt"></td></tr>
+      <tr><td>Статус</td><td id="rStatus"></td></tr>
+      <tr><td>Дата</td><td id="rDate"></td></tr>
+    </table>
+    <p class="send-line" id="sendLine">Подготовка отправки…</p>
+    <button class="btn ghost" id="btnRetry" style="margin-top:18px">↺ Пройти ещё раз</button>
+  </div>
+</section>
+
+<footer>ЭЛЕКТРОДИНАМИКА • ПЕРЕМЕННЫЙ ТОК • <span class="lock">🔒 АКАДЕМИЧЕСКАЯ ЧЕСТНОСТЬ</span></footer>
+</main>
+
+<!-- модал предупреждения античита -->
+<div class="modal hidden" id="warnModal" role="alertdialog" aria-modal="true">
+  <div class="modal-card">
+    <div class="warn-ico">⚠️</div>
+    <h3>Предупреждение <span id="warnCount">1</span> / 2</h3>
+    <p>Зафиксирована попытка покинуть тест!
+       <span class="reason" id="warnReason"></span>
+       При повторном нарушении тест будет <b>завершён автоматически</b>, попытка сгорит, результат — 0 баллов.</p>
+    <button class="btn lit" id="warnOk">Понятно, продолжаю</button>
+  </div>
+</div>
+
+<div class="flash hidden" id="flash">⏰ Время вышло!</div>
+
+<script>
+'use strict';
+/* ═══════════════════ НАСТРОЙКА ═══════════════════
+   Вставьте сюда URL веб-приложения из Apps Script
+   (Развернуть → Веб-приложение → «для всех»).      */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfEmllAnq8RdBlrlXq2n5IpFQQfRi0XNVQ0j3V25UaBBPybxtVENj6QEd6p-8Fun6XEA/exec';
+
+const TIME_PER_Q = 90;               // 1,5 минуты на вопрос
+const LETTERS = ['А','Б','В','Г'];
+const AKEY = 'ac11_attempts_v2';
+
+/* ═══════════════ ГРАФИКИ И СХЕМЫ (SVG) ═══════════════ */
+function sineGraph({Um, T, tMax, uStep, tStep}){
+  const W=360,H=252,L=48,Rr=16,Tp=18,B=38;
+  const pw=W-L-Rr, ph=H-Tp-B, cy=Tp+ph/2;
+  const X=t=>L+pw*t/tMax, uLim=Um*1.25, Y=u=>cy-(u/uLim)*(ph/2);
+  let s='';
+  for(let gx=L;gx<=L+pw+.5;gx+=12) s+=`<line class="g" x1="${gx}" y1="${Tp}" x2="${gx}" y2="${Tp+ph}"/>`;
+  for(let gy=Tp;gy<=Tp+ph+.5;gy+=12) s+=`<line class="g" x1="${L}" y1="${gy}" x2="${L+pw}" y2="${gy}"/>`;
+  for(let t=0;t<=tMax;t+=tStep) s+=`<line class="tk" x1="${X(t)}" y1="${cy-4}" x2="${X(t)}" y2="${cy+4}"/><text class="num" x="${X(t)}" y="${cy+17}" text-anchor="middle">${t}</text>`;
+  s+=`<text class="num" x="${L-7}" y="${cy+17}" text-anchor="end">0</text>`;
+  for(let u=-Um;u<=Um;u+=uStep){ if(!u)continue;
+    s+=`<line class="tk" x1="${L-4}" y1="${Y(u)}" x2="${L+4}" y2="${Y(u)}"/><text class="num" x="${L-8}" y="${Y(u)+3.5}" text-anchor="end">${u}</text>`; }
+  s+=`<line class="ax" x1="${L}" y1="${cy}" x2="${L+pw+8}" y2="${cy}"/><path class="axf" d="M${L+pw+8} ${cy} l-9 -4.5 v9 z"/>`;
+  s+=`<line class="ax" x1="${L}" y1="${Tp+ph}" x2="${L}" y2="${Tp-8}"/><path class="axf" d="M${L} ${Tp-8} l-4.5 9 h9 z"/>`;
+  s+=`<text class="axl" x="${L+pw+6}" y="${cy-9}" text-anchor="end">t, мс</text>`;
+  s+=`<text class="axl" x="${L+9}" y="${Tp}">u, В</text>`;
+  let d='';const N=140;
+  for(let i=0;i<=N;i++){const t=tMax*i/N;
+    d+=(i?'L':'M')+X(t).toFixed(1)+' '+Y(Um*Math.sin(2*Math.PI*t/T)).toFixed(1)+' ';}
+  s+=`<path class="wave" d="${d}"/>`;
+  return `<svg class="fig" viewBox="0 0 ${W} ${H}" role="img" aria-label="График напряжения">${s}</svg>`;
+}
+const RLC_SVG = `
+<svg class="circuit" viewBox="0 0 320 176" role="img" aria-label="Последовательная цепь: источник, резистор, катушка, конденсатор">
+  <path class="wire" d="M36 69 V30 H70"/>
+  <path class="wire" d="M70 30 l7.5 -10 l15 20 l15 -20 l15 20 l7.5 -10"/>
+  <path class="wire" d="M130 30 H170"/>
+  <path class="wire" d="M170 30 q7.5 -16 15 0 q7.5 -16 15 0 q7.5 -16 15 0 q7.5 -16 15 0"/>
+  <path class="wire" d="M230 30 H284 V140 H168"/>
+  <line class="wire" x1="168" y1="124" x2="168" y2="156"/>
+  <line class="wire" x1="154" y1="124" x2="154" y2="156"/>
+  <path class="wire" d="M154 140 H36 V101"/>
+  <circle class="wire" cx="36" cy="85" r="16"/>
+  <path class="wire" d="M28 85 q4 -8 8 0 q4 8 8 0"/>
+  <text class="cl" x="100" y="14" text-anchor="middle">R</text>
+  <text class="cl" x="200" y="14" text-anchor="middle">L</text>
+  <text class="cl" x="161" y="172" text-anchor="middle">C</text>
+</svg>`;
+
+/* ═══════════════════ БАНК ВОПРОСОВ ═══════════════════ */
+const VARIANTS = {
+'1':[
+ {type:'mc', topic:'ЭДС генератора',
+  q:'При равномерном вращении рамки в однородном магнитном поле ЭДС генератора изменяется по закону:',
+  opts:['ℰ = ℰ<sub>м</sub> · ω · t','ℰ = ℰ<sub>м</sub> · sin(ω · t)','ℰ = ℰ<sub>м</sub> · cos²(ω · t)','ℰ = ℰ<sub>м</sub> / t'], a:1},
+ {type:'mc', topic:'Частота вращения ротора',
+  q:'Ротор генератора стал вращаться в 2 раза чаще. Как изменится частота переменного тока в цепи?',
+  opts:['уменьшится в 2 раза','не изменится','увеличится в 2 раза','увеличится в 4 раза'], a:2},
+ {type:'mc', topic:'Мгновенное значение напряжения', fig:'graph',
+  q:'На графике показана зависимость напряжения от времени. Выберите уравнение мгновенного значения напряжения.',
+  opts:['u = 10 · sin(100π · t)','u = 5 · sin(100π · t)','u = 10 · sin(50π · t)','u = 20 · sin(100π · t)'], a:0},
+ {type:'mc', topic:'Мгновенное значение силы тока',
+  q:'Сила тока в цепи изменяется по закону: i = 2 · sin(314 · t) А. Чему равна амплитуда силы тока?',
+  opts:['314 А','√2 А','1 А','2 А'], a:3},
+ {type:'mc', topic:'Действующие значения',
+  q:'Действующее значение напряжения связано с амплитудным значением ℰ<sub>м</sub> (U<sub>м</sub>) соотношением:',
+  opts:['U = U<sub>м</sub> · √2','U = U<sub>м</sub> / √2','U = U<sub>м</sub> / 2','U = 2 · U<sub>м</sub>'], a:1},
+ {type:'mc', topic:'Условие резонанса', fig:'rlc',
+  q:'В цепи переменного тока последовательно соединены резистор, катушка и конденсатор (см. схему). При каком условии наступает резонанс напряжений?',
+  opts:['X<sub>L</sub> &gt; X<sub>C</sub>','R = X<sub>L</sub> + X<sub>C</sub>','X<sub>L</sub> &lt; X<sub>C</sub>','X<sub>L</sub> = X<sub>C</sub>'], a:3},
+ {type:'calc', topic:'Индуктивное сопротивление',
+  q:'Катушка с индуктивностью L = 0,2 Гн подключена к сети с частотой ν = 50 Гц. Найдите индуктивное сопротивление катушки. Примите π ≈ 3,14.',
+  ans:62.8, tol:0.5},
+ {type:'calc', topic:'Ёмкостное сопротивление',
+  q:'Конденсатор ёмкостью C = 50 мкФ подключён к сети с частотой ν = 50 Гц. Найдите ёмкостное сопротивление конденсатора. Примите π ≈ 3,14.',
+  ans:63.66, tol:1.5},
+ {type:'calc', topic:'Максимальный ток при резонансе',
+  q:'Резистор сопротивлением R = 20 Ом, катушка и конденсатор соединены последовательно и подключены к сети с действующим напряжением U = 220 В. Найдите амплитудное (максимальное) значение силы тока в режиме резонанса. Примите √2 ≈ 1,41.',
+  ans:15.53, tol:0.4},
+ {type:'calc', topic:'Коэффициент трансформации',
+  q:'Первичная обмотка трансформатора содержит N₁ = 2000 витков, вторичная — N₂ = 500 витков. Определите коэффициент трансформации.',
+  ans:4, tol:0.01}
+],
+'2':[
+ {type:'mc', topic:'ЭДС генератора',
+  q:'Работа генератора переменного тока основана на явлении:',
+  opts:['самоиндукции','электростатической индукции','электромагнитной индукции','резонанса напряжений'], a:2},
+ {type:'mc', topic:'Частота вращения ротора',
+  q:'Чтобы получить переменный ток частотой ν = 50 Гц, ротор генератора с одной парой магнитных полюсов должен совершать:',
+  opts:['25 оборотов в секунду','50 оборотов в секунду','100 оборотов в секунду','50 оборотов в минуту'], a:1},
+ {type:'mc', topic:'Мгновенное значение напряжения', fig:'graph',
+  q:'На графике показана зависимость напряжения от времени. Выберите уравнение мгновенного значения напряжения.',
+  opts:['u = 20 · sin(100π · t)','u = 20 · sin(50π · t)','u = 10 · sin(50π · t)','u = 40 · sin(25π · t)'], a:1},
+ {type:'mc', topic:'Мгновенное значение силы тока',
+  q:'Сила тока в цепи изменяется по закону: i = 4 · sin(314 · t) А. Чему равно действующее значение силы тока?',
+  opts:['4 А','8 А','≈ 2,8 А','≈ 1,4 А'], a:2},
+ {type:'mc', topic:'Действующие значения',
+  q:'Действующее значение переменного тока — это…',
+  opts:['максимальное значение тока за период','сила такого постоянного тока, который выделяет в проводнике такое же количество теплоты за период','среднее арифметическое значений тока за период','амплитуда колебаний силы тока'], a:1},
+ {type:'mc', topic:'Условие резонанса', fig:'rlc',
+  q:'При резонансе напряжений в цепи с последовательным соединением резистора, катушки и конденсатора (см. схему) полное сопротивление цепи равно:',
+  opts:['X<sub>L</sub> + X<sub>C</sub>','√(R² + X<sub>L</sub>²)','X<sub>L</sub> − X<sub>C</sub>','R'], a:3},
+ {type:'calc', topic:'Индуктивное сопротивление',
+  q:'Катушка с индуктивностью L = 0,4 Гн подключена к сети с частотой ν = 50 Гц. Найдите индуктивное сопротивление катушки. Примите π ≈ 3,14.',
+  ans:125.6, tol:1},
+ {type:'calc', topic:'Ёмкостное сопротивление',
+  q:'Конденсатор ёмкостью C = 25 мкФ подключён к сети с частотой ν = 50 Гц. Найдите ёмкостное сопротивление конденсатора. Примите π ≈ 3,14.',
+  ans:127.4, tol:2},
+ {type:'calc', topic:'Максимальный ток при резонансе',
+  q:'Резистор сопротивлением R = 44 Ом, катушка и конденсатор соединены последовательно и подключены к сети с действующим напряжением U = 220 В. Найдите амплитудное (максимальное) значение силы тока в режиме резонанса. Примите √2 ≈ 1,41.',
+  ans:7.06, tol:0.25},
+ {type:'calc', topic:'Коэффициент трансформации',
+  q:'Понижающий трансформатор подключён к сети с напряжением U₁ = 220 В; напряжение на вторичной обмотке U₂ = 11 В. Определите коэффициент трансформации.',
+  ans:20, tol:0.01}
+]};
+const GRAPHS = {'1':sineGraph({Um:10,T:20,tMax:20,uStep:5,tStep:5}),
+                '2':sineGraph({Um:20,T:40,tMax:40,uStep:10,tStep:10})};
+
+/* ═══════════════════ DOM ═══════════════════ */
+const $=id=>document.getElementById(id);
+const scr={start:$('scr-start'),rules:$('scr-rules'),quiz:$('scr-quiz'),result:$('scr-result')};
+const show=n=>{Object.values(scr).forEach(s=>s.classList.remove('on'));scr[n].classList.add('on');window.scrollTo(0,0);};
+
+const state={fio:'',cls:'',variant:'1',qs:[],qIndex:0,answers:[],selected:null,
+             started:false,finished:false,lock:false,qShown:0,attempt:0};
+
+$('dateNow').textContent=new Date().toLocaleDateString('ru-RU',{day:'2-digit',month:'long',year:'numeric'});
+
+/* ═══════════════════ ПОПЫТКИ ═══════════════════ */
+const keyOf=()=>`${state.fio.trim().toLowerCase()}|${state.cls}`;
+const getAtt=()=>{try{return JSON.parse(localStorage.getItem(AKEY))||{}}catch{return{}}};
+const bumpAtt=k=>{const m=getAtt();m[k]=(m[k]||0)+1;localStorage.setItem(AKEY,JSON.stringify(m));return m[k];};
+
+/* ═══════════════════ ТАЙМЕР ═══════════════════ */
+let tRemain=TIME_PER_Q*1000, tLast=0, tId=null, tPaused=false;
+const renderTimer=()=>{
+  const s=Math.ceil(tRemain/1000);
+  $('tTime').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  $('tBar').style.width=(tRemain/(TIME_PER_Q*1000)*100)+'%';
+  $('tBar').classList.toggle('low',s<=15);
+  $('tTime').classList.toggle('low',s<=10);
+};
+const startTimer=()=>{stopTimer();tRemain=TIME_PER_Q*1000;tPaused=false;tLast=performance.now();renderTimer();
+  tId=setInterval(()=>{
+    if(tPaused){tLast=performance.now();return;}
+    const now=performance.now();tRemain-=now-tLast;tLast=now;
+    if(tRemain<=0){tRemain=0;renderTimer();onTimeUp();}else renderTimer();
+  },100);};
+const stopTimer=()=>{if(tId){clearInterval(tId);tId=null;}};
+
+/* ═══════════════════ АНТИЧИТ ═══════════════════
+   Логика «двух предупреждений» + защита от ложных
+   срабатываний на iPhone (клавиатура, селекторы).  */
+const ac={active:false,strikes:0,last:0,baseW:0,baseH:0,modalOpen:false};
+const isField=el=>el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT'||el.isContentEditable);
+const inGrace=()=>Date.now()-state.qShown<900;   // льготное окно после перехода
+
+function registerViolation(reason){
+  if(!ac.active||ac.modalOpen||state.finished) return;
+  const now=Date.now(); if(now-ac.last<2200) return;  // «дребезг» событий
+  ac.last=now; ac.strikes++;
+  if(ac.strikes===1){
+    tPaused=true; ac.modalOpen=true;
+    $('warnReason').textContent='Причина: '+reason+'.';
+    $('warnModal').classList.remove('hidden');
+  }else finish('anticheat',reason);
+}
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden||!ac.active||state.finished) return;
+  if(ac.modalOpen){finish('anticheat','Уход во время предупреждения');return;}
+  registerViolation('вкладка была скрыта');
+});
+window.addEventListener('blur',()=>{
+  setTimeout(()=>{
+    if(!ac.active||ac.modalOpen||state.finished||document.hidden||inGrace()) return;
+    if(isField(document.activeElement)) return;   // клавиатура/элемент формы — НЕ нарушение
+    registerViolation('окно браузера потеряло фокус');
+  },450);
+});
+const onViewport=()=>{
+  if(!ac.active||ac.modalOpen||state.finished||inGrace()) return;
+  if(isField(document.activeElement)) return;      // цифровая клавиатура в расчётных задачах
+  const w=window.innerWidth,h=window.innerHeight;
+  if(Math.abs(w-ac.baseW)>40){ac.baseW=w;ac.baseH=h;return;} // поворот экрана
+  if(h<ac.baseH*0.72) registerViolation('поверх теста выдвинуто другое окно');
+};
+window.addEventListener('resize',onViewport);
+if(window.visualViewport) window.visualViewport.addEventListener('resize',onViewport);
+$('warnOk').addEventListener('click',()=>{
+  $('warnModal').classList.add('hidden');ac.modalOpen=false;
+  state.qShown=Date.now();tPaused=false;tLast=performance.now();
+});
+
+/* ═══════════════════ ХОД ТЕСТА ═══════════════════ */
+$('btnToRules').addEventListener('click',()=>{
+  const fio=$('inpFio').value.trim();
+  const ok=fio.split(/\s+/).filter(Boolean).length>=2 && $('selClass').value && $('selVariant').value;
+  $('fioErr').classList.toggle('show',!ok);
+  if(!ok) return;
+  state.fio=fio;state.cls=$('selClass').value;state.variant=$('selVariant').value;
+  const n=(getAtt()[keyOf()]||0)+1;
+  $('attemptBadge').textContent=`Попытка № ${n}`;
+  show('rules');
+});
+['inpFio','selClass','selVariant'].forEach(id=>$(id).addEventListener('input',()=>$('fioErr').classList.remove('show')));
+$('btnToRules').addEventListener('input',()=>{});
+
+$('btnStart').addEventListener('click',()=>{
+  state.attempt=bumpAtt(keyOf());
+  state.qs=VARIANTS[state.variant].slice();
+  state.qIndex=0;state.answers=[];state.selected=null;
+  state.started=true;state.finished=false;state.lock=false;
+  $('qWho').innerHTML=`<b>${state.fio}</b> • ${state.cls} • Вариант ${state.variant}`;
+  $('qTotal').textContent=state.qs.length;
+  $('segs').innerHTML=state.qs.map(()=>'<span></span>').join('');
+  ac.active=true;ac.strikes=0;ac.last=0;ac.baseW=innerWidth;ac.baseH=innerHeight;
+  show('quiz');
+  renderQuestion();
+});
+
+function renderQuestion(){
+  const i=state.qIndex,q=state.qs[i];
+  state.selected=null;state.lock=false;state.qShown=Date.now();
+  $('qNum').textContent=i+1;
+  $('qTopic').textContent=q.topic;
+  $('qText').innerHTML=q.q;
+  $('qFig').innerHTML=q.fig==='graph'?GRAPHS[state.variant]:(q.fig==='rlc'?RLC_SVG:'');
+  [...$('segs').children].forEach((s,k)=>{s.className=k<i?'done':(k===i?'cur':'');});
+  const next=$('btnNext');
+  next.disabled=true;next.classList.remove('lit');
+  next.textContent=(i===state.qs.length-1)?'Завершить тест ✓':'Далее →';
+  if(q.type==='mc'){
+    $('optWrap').classList.remove('hidden');$('calcWrap').classList.add('hidden');
+    $('optWrap').innerHTML=q.opts.map((o,k)=>
+      `<button type="button" class="opt" data-i="${k}"><span class="key">${LETTERS[k]}</span><span>${o}</span></button>`).join('');
+    $('optWrap').querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>{
+      if(state.lock) return;
+      $('optWrap').querySelectorAll('.opt').forEach(x=>x.classList.remove('picked'));
+      b.classList.add('picked');
+      state.selected=+b.dataset.i;
+      next.disabled=false;next.classList.add('lit');
+    }));
+  }else{
+    $('optWrap').classList.add('hidden');$('calcWrap').classList.remove('hidden');
+    $('optWrap').innerHTML='';
+    const inp=$('calcInp');inp.value='';
+    next.disabled=true;
+  }
+  startTimer();
+}
+const parseAns=v=>{const n=parseFloat(String(v).trim().replace(/\s/g,'').replace(',','.'));return Number.isFinite(n)?n:null;};
+$('calcInp').addEventListener('input',e=>{
+  const ok=parseAns(e.target.value)!==null;
+  $('btnNext').disabled=!ok;$('btnNext').classList.toggle('lit',ok);
+});
+$('calcInp').addEventListener('keydown',e=>{if(e.key==='Enter')$('btnNext').click();});
+
+const record=v=>{
+  const q=state.qs[state.qIndex];
+  const ok=q.type==='mc'?v===q.a:(v!==null&&Math.abs(v-q.ans)<=q.tol);
+  state.answers.push({v,ok});
+};
+const advance=()=>{
+  state.lock=false;
+  if(state.qIndex>=state.qs.length-1){finish('done');}
+  else{state.qIndex++;renderQuestion();}
+};
+$('btnNext').addEventListener('click',()=>{
+  if(state.finished||state.lock) return;
+  const q=state.qs[state.qIndex];let v=null;
+  if(q.type==='mc'){if(state.selected===null)return;v=state.selected;}
+  else{v=parseAns($('calcInp').value);if(v===null)return;}
+  state.lock=true;stopTimer();record(v);
+  $('btnNext').disabled=true;
+  setTimeout(advance,220);
+});
+function onTimeUp(){
+  if(state.finished||state.lock) return;
+  stopTimer();state.lock=true;
+  const q=state.qs[state.qIndex];
+  const v=q.type==='mc'?state.selected:parseAns($('calcInp').value);
+  record(v);
+  $('flash').classList.remove('hidden');
+  setTimeout(()=>{$('flash').classList.add('hidden');advance();},700);
+}
+
+/* ═══════════════════ ФИНИШ И РЕЗУЛЬТАТ ═══════════════════ */
+const verdict=s=>s===10?['🏆 Максимум! Блестящая работа!','var(--lime)']
+  :s>=8?['⚡ Отличный результат!','var(--cyan)']
+  :s>=5?['👍 Неплохо, но тему стоит повторить','var(--amber)']
+  :['📚 Нужно повторить тему ещё раз','var(--red)'];
+
+function finish(reason,note=''){
+  if(state.finished) return;
+  state.finished=true;ac.active=false;stopTimer();
+  const earned=state.answers.filter(a=>a.ok).length;
+  const score=reason==='anticheat'?0:earned;
+  const pct=Math.round(score*10);
+  $('rScore').textContent=score;
+  $('rFio').textContent=state.fio;
+  $('rCls').textContent=state.cls;
+  $('rVar').textContent='Вариант '+state.variant;
+  $('rOk').textContent=`${earned} из ${state.qs.length}`;
+  $('rAtt').textContent=state.attempt;
+  $('rDate').textContent=new Date().toLocaleString('ru-RU');
+  const [txt,col]=reason==='anticheat'
+    ?['⛔ Тест завершён системой античита — результат аннулирован','var(--red)']:verdict(score);
+  const vd=$('rVerdict');vd.textContent=txt;vd.style.color=col;
+  $('rStatus').textContent=reason==='anticheat'?'АНТИЧИТ ('+(note||'нарушение')+')':'Завершён';
+  $('rStatus').style.color=reason==='anticheat'?'var(--red)':'var(--lime)';
+  const ring=$('ringFg');ring.style.stroke=reason==='anticheat'?'var(--red)':'var(--cyan)';
+  ring.style.strokeDashoffset=402;
+  show('result');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ring.style.strokeDashoffset=402-402*pct/100;}));
+  sendResult(score,pct,reason,note);
+}
+function buildPayload(score,pct,reason,note){
+  return {datetime:new Date().toLocaleString('ru-RU'),fio:state.fio,cls:state.cls,
+    variant:'Вариант '+state.variant,score,max:10,percent:pct,attempt:state.attempt,
+    status:reason==='anticheat'?`АНТИЧИТ: ${note||'нарушение'}`:(reason==='left'?'Покинул тест':'Завершён'),
+    ua:navigator.userAgent.slice(0,120)};
+}
+function sendResult(score,pct,reason,note){
+  const line=$('sendLine');
+  if(!/^https/.test(SCRIPT_URL)){line.textContent='⚠️ Google Таблица не подключена: не указан URL скрипта в файле';line.className='send-line warn';return;}
+  line.textContent='Отправка результата учителю…';
+  fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(buildPayload(score,pct,reason,note))})
+  .then(()=>{line.textContent='✓ Результат отправлен в Google Таблицу';line.className='send-line ok';})
+  .catch(()=>{line.textContent='✗ Ошибка отправки. Сообщите результат учителю';line.className='send-line bad';});
+}
+addEventListener('pagehide',()=>{          // ушёл со страницы посреди теста → фиксируем
+  if(state.started&&!state.finished&&/^https/.test(SCRIPT_URL)){
+    try{navigator.sendBeacon(SCRIPT_URL,new Blob([JSON.stringify(buildPayload(0,0,'left',''))],{type:'text/plain'}));}catch(e){}
+  }
+});
+$('btnRetry').addEventListener('click',()=>{
+  state.started=false;state.finished=false;show('start');
+});
+</script>
+</body>
+</html>
